@@ -7,16 +7,12 @@ from flask import Flask, render_template, url_for, redirect, request
 
 from flask import Flask, render_template, url_for, redirect, request
 from flask_login import UserMixin, LoginManager, login_user, logout_user, login_required
-#from flask_bcrypt import Bcrypt
+from flask_bcrypt import Bcrypt
 
-from models import User, Post, Food, Order, Pay, Restaurant, RestTable
+from models import User, Customer, Food, Order, Pay, Restaurant, RestTable
 #db = SQLAlchemy()
 admin = Admin()
 
-class PostView(ModelView):
-    can_delete = False
-    form_columns = ["title", "body", "user"]
-    column_list = ["title", "body", "user"]
 
 class FoodView(ModelView):
     can_delete = False
@@ -29,7 +25,6 @@ class RestView(ModelView):
     column_list = ["restname"]
 
 admin.add_view(ModelView(User, db.session))
-admin.add_view(PostView(Post, db.session))
 admin.add_view(FoodView(Food, db.session))
 admin.add_view(RestView(Restaurant, db.session))
 admin.add_view(ModelView(RestTable, db.session))
@@ -37,7 +32,7 @@ admin.add_view(ModelView(RestTable, db.session))
 
 app = Flask(__name__)
 login_manager = LoginManager(app)
-#bcrypt = Bcrypt(app)
+bcrypt = Bcrypt(app)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
 app.config['SECRET_KEY'] = 'this is a secret key '
@@ -45,9 +40,14 @@ app.config['SECRET_KEY'] = 'this is a secret key '
 db.init_app(app)
 admin.init_app(app)
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+@login_manager.user_loader
+def load_customer(id):
+    return Customer.query.get(int(id))
 
 @login_manager.user_loader
 def load_order(order_no):
@@ -68,11 +68,9 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        user = User.query.filter_by(username=username).first()
-
-        if user and bcrypt.check_password_hash(user.password, password):
-            login_user(user)
-
+        customer = Customer.query.filter_by(username=username).first()
+        if customer and bcrypt.check_password_hash(customer.password, password):
+            login_user(customer)
             return redirect(url_for('welcome'))
 
     return render_template('login.html')
@@ -86,8 +84,8 @@ def register():
         password = request.form['password']
         hashed_password = bcrypt.generate_password_hash(
             password).decode('utf-8')
-        new_user = User(username=username, email=email, password=hashed_password)
-        db.session.add(new_user)
+        new_customer = Customer(username=username, email=email, password=hashed_password)
+        db.session.add(new_customer)
         db.session.commit()
         return redirect(url_for('login'))
     return render_template('registration.html')
