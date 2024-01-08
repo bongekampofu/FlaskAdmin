@@ -6,9 +6,6 @@ from flask_login import UserMixin
 from datetime import datetime as dt
 from sqlalchemy import Column, Integer, DateTime
 
-
-
-
 class User(db.Model, UserMixin):
  id = db.Column(db.Integer, primary_key=True)
  username = db.Column(db.String(50))
@@ -17,18 +14,20 @@ class User(db.Model, UserMixin):
  #hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
  #password=hashed_password
 
- posts = db.relationship("Post", back_populates="user")
 
  def __str__(self):
     return self.username
     #return f'<User {self.username}>'
 
-class Post(db.Model):
-  id = db.Column(db.Integer, primary_key=True)
-  title = db.Column(db.String(100))
-  body = db.Column(db.Text)
-  user_id = db.Column(db.ForeignKey("user.id"), nullable=False)
-  user = db.relationship("User", back_populates="posts")
+class Customer(db.Model, UserMixin):
+     id = db.Column(db.Integer, primary_key=True)
+     username = db.Column(db.String(20), unique=True, nullable=False)
+     password = db.Column(db.String(80), nullable=False)
+     email = db.Column(db.String(80), nullable=False)
+
+def __str__(self):
+     return self.username
+
 
 class Restaurant(db.Model):
  id = db.Column(db.Integer, primary_key=True)
